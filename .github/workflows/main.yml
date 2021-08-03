@@ -9,6 +9,10 @@ on:
         branches: [feature/v3-net5]
     pull_request:
         branches: [feature/v3-net5]
+    workflow_dispatch:
+
+env:
+    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
 jobs:
     build:
@@ -17,13 +21,18 @@ jobs:
         steps:
             - uses: actions/checkout@v2
 
-            - name: Set up .NET
-              uses: actions/setup-dotnet@v1.5.0
+            - name: Setup .NET Core SDK 3
+              uses: actions/setup-dotnet@v1.8.1
               with:
-                  dotnet-version: 5.0.302
+                  dotnet-version: 3.1.x
 
-            - name: Set up Node
-              uses: actions/setup-node@v2.1.1
+            - name: Setup .NET Core SDK 5
+              uses: actions/setup-dotnet@v1.8.1
+              with:
+                  dotnet-version: 5.0.x
+
+            - name: Setup Node.js environment
+              uses: actions/setup-node@v2.3.0
               with:
                   node-version: 14.x
                   check-latest: true
