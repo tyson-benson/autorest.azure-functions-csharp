@@ -13,10 +13,10 @@ modelerfour:
   flatten-payloads: true
   group-parameters: true
 pipeline:
-  azure-functions-csharp:
+  azure-functions-csharp-net5:
     input: modelerfour/identity
-  azure-functions-csharp/emitter:
-    input: azure-functions-csharp
+  azure-functions-csharp-net5/emitter:
+    input: azure-functions-csharp-net5
     scope: output-scope
 output-scope:
   output-artifact: source-file-csharp

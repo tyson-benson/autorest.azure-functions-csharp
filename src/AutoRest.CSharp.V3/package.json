@@ -1,10 +1,10 @@
 {
-    "version": "0.2.0-preview",
-    "name": "@autorest/azure-functions-csharp",
-    "description": "The Azure Functions extension for csharp code generators in AutoRest.",
+    "version": "0.1.0-preview",
+    "name": "azure-functions-csharp-net5",
+    "description": "The Azure Functions extension for csharp code generators in AutoRest. This extension generates a .net 5 isolated function app.",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Azure/autorest.azure-functions-csharp"
+        "url": "https://github.com/tyson-benson/autorest.azure-functions-csharp"
     },
     "scripts": {
         "start": "dotnet ./AutoRest.CSharp.V3.dll --server"
@@ -12,9 +12,9 @@
     "author": "Microsoft Corporation",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/Azure/autorest.azure-functions/issues"
+        "url": "https://github.com/tyson-benson/autorest.azure-functions/issues"
     },
-    "homepage": "https://github.com/Azure/autorest.azure-functions-csharp/",
+    "homepage": "https://github.com/tyson-benson/autorest.azure-functions-csharp/",
     "devDependencies": {},
     "dependencies": {}
 }
