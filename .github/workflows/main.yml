@@ -3,76 +3,76 @@
 name: CI
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the feature/v3 branch
+# events but only for the feature/v3-net5 branch
 on:
-  push:
-    branches: [ feature/v3 ]
-  pull_request:
-    branches: [ feature/v3 ]
+    push:
+        branches: [feature/v3-net5]
+    pull_request:
+        branches: [feature/v3-net5]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+    build:
+        runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
+        steps:
+            - uses: actions/checkout@v2
 
-    - name: Set up .NET
-      uses: actions/setup-dotnet@v1.5.0
-      with:
-        dotnet-version: 3.0.100
+            - name: Set up .NET
+              uses: actions/setup-dotnet@v1.5.0
+              with:
+                  dotnet-version: 5.0.302
 
-    - name: Set up Node
-      uses: actions/setup-node@v2.1.1
-      with:
-        node-version: 13.x
-        check-latest: true
-        
-    - name: Perform npm install
-      run: npm ci
+            - name: Set up Node
+              uses: actions/setup-node@v2.1.1
+              with:
+                  node-version: 14.x
+                  check-latest: true
 
-    - name: Build AutoRest.CSharp.V3
-      run: dotnet build AutoRest.CSharp.V3.sln
-      env:
-          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
-          DOTNET_CLI_TELEMETRY_OPTOUT: 1
-          DOTNET_MULTILEVEL_LOOKUP: 0
-    
-    - name: Create tgz
-      id: create_tgz
-      run: |
-        cd artifacts/bin/AutoRest.CSharp.V3/Debug/netcoreapp3.0/
-        currentVersion=$(node -p -e "require('./package.json').version")
-        devVersion="${currentVersion}-dev.$GITHUB_RUN_ID"
-        echo "Setting version to ${devVersion}"
-        npm version --no-git-tag-version ${devVersion}
-        outfile=$(npm pack -q)
-        echo "Generated ${outfile}"
-        outfilewithoutextension=${outfile%.*}
-        echo "::set-output name=versionTag::${devVersion}"
-        echo "::set-output name=fileName::${outfile}"
-        echo "::set-output name=releaseName::${outfilewithoutextension}"
-      
-    - name: Create GitHub release (on merge only)
-      id: create_release
-      uses: actions/create-release@v1
-      if: ${{ github.event_name == 'push' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ steps.create_tgz.outputs.versionTag }}
-        release_name: ${{ steps.create_tgz.outputs.releaseName }}
-        body: prerelease-build
-        draft: false
-        prerelease: true
-      
-    - name: Upload tgz to release (on merge only)
-      uses: actions/upload-release-asset@v1.0.2
-      if: ${{ github.event_name == 'push' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/bin/AutoRest.CSharp.V3/Debug/netcoreapp3.0/${{ steps.create_tgz.outputs.fileName }}
-        asset_name: ${{ steps.create_tgz.outputs.fileName }}
-        asset_content_type: application/gzip
+            - name: Perform npm install
+              run: npm ci
+
+            - name: Build AutoRest.CSharp.V3
+              run: dotnet build AutoRest.CSharp.V3.sln
+              env:
+                  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+                  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+                  DOTNET_MULTILEVEL_LOOKUP: 0
+
+            - name: Create tgz
+              id: create_tgz
+              run: |
+                  cd artifacts/bin/AutoRest.CSharp.V3/Debug/net5.0/
+                  currentVersion=$(node -p -e "require('./package.json').version")
+                  devVersion="${currentVersion}-dev.$GITHUB_RUN_ID"
+                  echo "Setting version to ${devVersion}"
+                  npm version --no-git-tag-version ${devVersion}
+                  outfile=$(npm pack -q)
+                  echo "Generated ${outfile}"
+                  outfilewithoutextension=${outfile%.*}
+                  echo "::set-output name=versionTag::${devVersion}"
+                  echo "::set-output name=fileName::${outfile}"
+                  echo "::set-output name=releaseName::${outfilewithoutextension}"
+
+            - name: Create GitHub release (on merge only)
+              id: create_release
+              uses: actions/create-release@v1
+              if: ${{ github.event_name == 'push' }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: v${{ steps.create_tgz.outputs.versionTag }}
+                  release_name: ${{ steps.create_tgz.outputs.releaseName }}
+                  body: prerelease-build
+                  draft: false
+                  prerelease: true
+
+            - name: Upload tgz to release (on merge only)
+              uses: actions/upload-release-asset@v1.0.2
+              if: ${{ github.event_name == 'push' }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: artifacts/bin/AutoRest.CSharp.V3/Debug/net5.0/${{ steps.create_tgz.outputs.fileName }}
+                  asset_name: ${{ steps.create_tgz.outputs.fileName }}
+                  asset_content_type: application/gzip
