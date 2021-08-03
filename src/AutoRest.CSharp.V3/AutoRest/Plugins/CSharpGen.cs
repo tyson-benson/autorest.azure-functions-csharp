@@ -23,10 +23,12 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
 using Diagnostic = Microsoft.CodeAnalysis.Diagnostic;
+using AutoRest.CSharp.V3.Output.Models;
+using AutoRest.CSharp.V3.Output.Models.Requests;
 
 namespace AutoRest.CSharp.V3.AutoRest.Plugins
 {
-    [PluginName("azure-functions-csharp")]
+    [PluginName("azure-functions-csharp-net5-isolated")]
     internal class CSharpGen : IPlugin
     {
 
@@ -53,11 +55,14 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
                 var LocalSettingsJSONTemplate = File.ReadAllText(@"StaticResources/LocalSettingsJSONTemplate.json");
                 var VSCodeExtensions = File.ReadAllText(@"StaticResources/VSCodeExtensions.json");
                 var HostJSONTemplate = File.ReadAllText(@"StaticResources/HostJSONTemplate.json");
+                var ProgramCsTemplate = File.ReadAllText(@"StaticResources/ProgramCsTemplate.txt");
+                ProgramCsTemplate = ProgramCsTemplate.Replace("NAMESPACE_PLACEHOLDER", configuration.Namespace);
 
                 project.AddGeneratedFile(".gitignore", GitIgnoreTemplateFile);
                 project.AddGeneratedFile(".vscode/extensions.json", VSCodeExtensions);
                 project.AddGeneratedFile("host.json", HostJSONTemplate);
                 project.AddGeneratedFile("local.settings.json", LocalSettingsJSONTemplate);
+                project.AddGeneratedFile("Program.cs", ProgramCsTemplate);
                 if (autoRest != null)
                     { _ = await cSharpProj.Execute(autoRest); }
             }
@@ -74,44 +79,105 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
                 project.AddGeneratedFile($"Models/{name}.cs", codeWriter.ToString());
             }
 
-            foreach (Output.Models.RestClient? client in context.Library.RestClients)
+            var clientsAndOperations =
+                from client in context.Library.RestClients
+                from operation in client.Methods
+                let path = operation.Request.PathSegments.FirstOrDefault(seg => seg.Value.IsConstant && !string.IsNullOrEmpty(seg.Value.Constant.Value?.ToString()))?.Value.Constant.Value?.ToString()?.Trim('/')
+                select new ClientAndOperation(
+                    client,
+                    operation,
+                    path
+                );
+
+            switch (configuration.ApiGroupBy)
             {
-                // HACK: since I'm mooching off of rest clients, need to map based on path segments
-                // to reasonable file chunks
-                IEnumerable<IGrouping<string, Output.Models.Requests.RestClientMethod>>? apiGroups = client.Methods.GroupBy(m =>
-                {
-                    Output.Models.Requests.PathSegment? pathSegment = m.Request.PathSegments.First(s => {
-                        var segementValue = s.Value.IsConstant ? s.Value.Constant.Value : null;
-                        if (segementValue != null)
-                        {
-                            return (segementValue.ToString() ?? string.Empty).StartsWith("/");
-                        }
-                        return false;
-                    });
-
-                    if (pathSegment != null)
+                case ApiGroupBy.Operation:
+                case ApiGroupBy.OperationFlat:
                     {
-                        var pathString = pathSegment.Value.Constant.Value?.ToString();
+                        var apiGroups = clientsAndOperations.GroupBy(co => co.Operation.Name);
 
-                        if (!string.IsNullOrWhiteSpace(pathString) && pathString.Contains('/'))
+                        foreach (var apiGroup in apiGroups)
                         {
-                            return pathString.Split('/', StringSplitOptions.RemoveEmptyEntries).First().ToLower();
+                            var codeWriter = new CodeWriter();
+                            var ns = apiGroup.First().Client.Type.Namespace;
+                            var cs = new CSharpType(new SelfTypeProvider(context), ns, $"{apiGroup.Key.ToCleanName()}Api");
+                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs);
+
+                            var isFlat = configuration.ApiGroupBy == ApiGroupBy.OperationFlat;
+                            //TODO consider adding a parameter to specify a desired maximum nesting depth
+                            var folder = isFlat ? "" : $"{apiGroup.First().Path}/";
+                            project.AddGeneratedFile($"{folder}{cs.Name}.cs", codeWriter.ToString());
                         }
                     }
+                    break;
 
-                    return string.Empty;
-                });
+                case ApiGroupBy.OperationGroup:
+                    {
+                        var apiGroups = clientsAndOperations.GroupBy(co => co.Client.ClientPrefix);
 
-                foreach (IGrouping<string, Output.Models.Requests.RestClientMethod>? apiGroup in apiGroups)
-                {
-                    var codeWriter = new CodeWriter();
-                    var cs = new CSharpType(new SelfTypeProvider(context), client.Type.Namespace, $"{apiGroup.Key.ToCleanName()}Api");
-                    restServerWriter.WriteServer(codeWriter, apiGroup, cs);
+                        foreach (var apiGroup in apiGroups)
+                        {
+                            var codeWriter = new CodeWriter();
+                            var ns = apiGroup.First().Client.Type.Namespace;
+                            var cs = new CSharpType(new SelfTypeProvider(context), ns, $"{apiGroup.Key.ToCleanName()}Api");
+                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs);
 
-                    project.AddGeneratedFile($"{cs.Name}.cs", codeWriter.ToString());
-                }
+                            project.AddGeneratedFile($"{cs.Name}.cs", codeWriter.ToString());
+                        }
+                    }
+                    break;
 
+                case ApiGroupBy.FirstPathSegment:
+                case ApiGroupBy.LastPathSegment:
+                    {
+                        var apiGroups = clientsAndOperations.GroupBy(co =>
+                        {
+                            //Default grouping, first segment of operation path /admin/secrets -> AdminApi.cs
+                            Output.Models.Requests.PathSegment? pathSegment = co.Operation.Request.PathSegments.First(s =>
+                            {
+                                var segementValue = s.Value.IsConstant ? s.Value.Constant.Value : null;
+                                if (segementValue != null)
+                                {
+                                    return (segementValue.ToString() ?? string.Empty).StartsWith("/");
+                                }
+                                return false;
+                            });
 
+                            if (pathSegment != null)
+                            {
+                                var pathString = pathSegment.Value.Constant.Value?.ToString();
+
+                                if (!string.IsNullOrWhiteSpace(pathString) && pathString.Contains('/'))
+                                {
+                                    var segments = pathString.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                                    if (configuration.ApiGroupBy == ApiGroupBy.FirstPathSegment)
+                                    {
+                                        return segments.First().ToLower();
+                                    }
+                                    if (configuration.ApiGroupBy == ApiGroupBy.LastPathSegment)
+                                    {
+                                        return segments.Last().ToLower();
+                                    }
+                                }
+                            }
+
+                            return string.Empty;
+                        });
+
+                        foreach (var apiGroup in apiGroups)
+                        {
+                            var codeWriter = new CodeWriter();
+                            var ns = apiGroup.First().Client.Type.Namespace;
+                            var cs = new CSharpType(new SelfTypeProvider(context), ns, $"{apiGroup.Key.ToCleanName()}Api");
+                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs);
+
+                            project.AddGeneratedFile($"{cs.Name}.cs", codeWriter.ToString());
+                        }
+                    }
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(configuration.ApiGroupBy), "Unknown api-grouping value: " + configuration.ApiGroupBy);
             }
 
             return project;
@@ -119,8 +185,10 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
 
         public async Task<bool> Execute(IPluginCommunication autoRest)
         {
-            string codeModelFileName = (await autoRest.ListInputs()).FirstOrDefault();
+            string? codeModelFileName = (await autoRest.ListInputs()).FirstOrDefault();
             if (string.IsNullOrEmpty(codeModelFileName)) throw new Exception("Generator did not receive the code model file.");
+
+            var listInputs = await autoRest.ListInputs();
 
             var codeModelYaml = await autoRest.ReadFile(codeModelFileName);
 
@@ -129,6 +197,7 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
             var configuration = new Configuration(
                 new Uri(GetRequiredOption(autoRest, "output-folder")).LocalPath,
                 GetRequiredOption(autoRest, "namespace"),
+                GetRequiredOption(autoRest, "api-group-by"),
                 autoRest.GetValue<string?>("library-name").GetAwaiter().GetResult(),
                 autoRest.GetValue<bool?>("save-inputs").GetAwaiter().GetResult() ?? false,
                 autoRest.GetValue<bool?>("public-clients").GetAwaiter().GetResult() ?? false,
@@ -155,4 +224,6 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
             return autoRest.GetValue<string?>(name).GetAwaiter().GetResult() ?? throw new InvalidOperationException($"{name} configuration parameter is required");
         }
     }
+
+    internal record ClientAndOperation(RestClient Client, RestClientMethod Operation, string Path);
 }

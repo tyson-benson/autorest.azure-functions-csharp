@@ -1,4 +1,4 @@
 {
-  "name": "@autorest/azure-functions-csharp",
-  "version": "0.2.0-preview"
+    "name": "tyson-benson/azure-functions-csharp-net5-isolated",
+    "version": "0.1.0-preview"
 }

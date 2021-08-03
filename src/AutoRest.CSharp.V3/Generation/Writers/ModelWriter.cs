@@ -22,10 +22,13 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                 case ObjectType objectSchema:
                     WriteObjectSchema(writer, objectSchema);
                     break;
-                case EnumType e when e.IsExtendable:
-                    WriteChoiceSchema(writer, e);
-                    break;
-                case EnumType e when !e.IsExtendable:
+                //case EnumType e when e.IsExtendable:
+                //    WriteChoiceSchema(writer, e);
+                //    break;
+                //case EnumType e when !e.IsExtendable:
+                //    WriteSealedChoiceSchema(writer, e);
+                //    break;
+                case EnumType e:
                     WriteSealedChoiceSchema(writer, e);
                     break;
                 default:
@@ -217,10 +220,10 @@ namespace AutoRest.CSharp.V3.Generation.Writers
 
         private void WriteSealedChoiceSchema(CodeWriter writer, EnumType schema)
         {
-            if (schema.Declaration.IsUserDefined)
-            {
-                return;
-            }
+            //if (schema.Declaration.IsUserDefined)
+            //{
+            //    return;
+            //}
 
             using (writer.Namespace(schema.Declaration.Namespace))
             {

@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoRest.CSharp.V3.Generation.Types;
@@ -20,11 +22,9 @@ using AutoRest.CSharp.V3.Utilities;
 using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using Response = Azure.Response;
 
 namespace AutoRest.CSharp.V3.Generation.Writers
 {
@@ -36,9 +36,9 @@ namespace AutoRest.CSharp.V3.Generation.Writers
             {
                 using (writer.Scope($"public class {cs.Name}"))
                 {
-                    WriteClientFields(writer, cs);
-
-                    WriteClientCtor(writer, cs);
+                    //The logger is obtained from the executionContext, rather than being injected by ctor
+                    //WriteClientFields(writer, cs);
+                    //WriteClientCtor(writer, cs);
 
                     foreach (var method in methods)
                     {
@@ -85,12 +85,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
             writer.Line($")");
             using (writer.Scope())
             {
-                writer.WriteParameterNullChecks(parameters);
-
-                foreach (Parameter clientParameter in parameters)
-                {
-                    writer.Line($"_{clientParameter.Name} = {clientParameter.Name};");
-                }
+                writer.WriteParameterAssignmentsWithNullChecks(parameters);
             }
             writer.Line();
         }
@@ -253,7 +248,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
         {
             using var methodScope = writer.AmbientScope();
 
-            CSharpType? bodyType = new CSharpType(typeof(Task<IActionResult>)); // operation.ReturnType;
+            CSharpType? bodyType = new CSharpType(typeof(Task<HttpResponseData>)); // operation.ReturnType;
             CSharpType? headerModelType = operation.HeaderModel?.Type;
 
             bool bodyIsTrigger = false;
@@ -262,7 +257,8 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                 bodyIsTrigger = true;
             }
 
-            var httpRequestParameter = new Parameter("req", "Raw HTTP Request", new CSharpType(typeof(Microsoft.AspNetCore.Http.HttpRequest)), null, false);
+            var httpRequestParameter = new Parameter("req", "A representation of the HTTP request sent by the host.", new CSharpType(typeof(HttpRequestData)), null, false);
+            var functionContext = new Parameter("executionContext", "Encapsulates the information about a function execution.", new CSharpType(typeof(FunctionContext)), null, false);
             var parameters = operation.Parameters.ToList();
 
             // If we have parameters that are not in the route, then we can't have them in this list.
@@ -281,13 +277,15 @@ namespace AutoRest.CSharp.V3.Generation.Writers
             if (!bodyIsTrigger)
             {
                 parameters.Insert(0, httpRequestParameter);
+                parameters.Insert(1, functionContext);
             }
             else
             {
-                // Insert req before optional params
+                // Insert req & context before optional params
                 if (indexOfFirstOptional == -1)
                 {
                     parameters.Add(httpRequestParameter);
+                    parameters.Add(functionContext);
                 }
                 else
                 {
@@ -314,13 +312,15 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                 writer.WriteXmlDocumentationParameter(parameter.Name, parameter.Description);
             }
 
-            writer.WriteXmlDocumentationParameter("cancellationToken", "The cancellation token provided on Function shutdown.");
+            //https://docs.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide#differences-with-net-class-library-functions
+            //writer.WriteXmlDocumentationParameter("cancellationToken", "The cancellation token provided on Function shutdown.");
 
             writer.WriteXmlDocumentationRequiredParametersException(parameters);
 
             var methodName = CreateMethodName(operation.Name, true);
-            writer.Append($"[{new CSharpType(typeof(FunctionNameAttribute))}(\"{methodName}_{operation.Request.HttpMethod.Method.ToLowerInvariant()}\")]");
-            writer.Append($"public async {new CSharpType(typeof(Task<>), new CSharpType(typeof(IActionResult)))} {methodName}(");
+            var fullMethodName = $"{methodName}_{operation.Request.HttpMethod.Method.ToLowerInvariant()}";
+            writer.Append($"[{new CSharpType(typeof(FunctionAttribute))}(\"{fullMethodName}\")]");
+            writer.Append($"public async {new CSharpType(typeof(Task<>), new CSharpType(typeof(HttpResponseData)))} {methodName}(");
 
             string route = string.Empty;
             foreach (var pathSegement in operation.Request.PathSegments)
@@ -350,11 +350,14 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                     writer.WriteParameter(parameter);
                 }
             }
-            writer.Line($"{typeof(CancellationToken)} cancellationToken = default)");
+            //writer.Line($"{typeof(CancellationToken)} cancellationToken = default)"); //Not supported in isolated runtime
+            writer.RemoveTrailingComma();
+            writer.Line($")");
 
             using (writer.Scope())
             {
-                writer.Line($"_logger.LogInformation(\"HTTP trigger function processed a request.\");").Line();
+                writer.Line($"var logger = executionContext.GetLogger(nameof({functionNamePrefix}));");
+                writer.Line($"logger.LogInformation(\"HTTP trigger function processed a request.\");").Line();
 
                 if (operation.Responses.Any())
                 {
@@ -365,35 +368,20 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                     foreach (var statusCode in response.StatusCodes)
                     {
                         writer.Line($"// Spec Defines: HTTP {statusCode}");
+
+                        if (statusCode == 200 && response.ResponseBody != null)
+                        {
+                            //Give an example of constructing the response object
+                            writer.Line($"// Example:");
+                            writer.Line($"// var response = req.CreateResponse({typeof(HttpStatusCode)}.OK);");
+                            writer.Line($"// var model = {response.ResponseBody.Type.Name}...");
+                            writer.Line($"// await response.WriteAsJsonAsync(model);");
+                            writer.Line($"// return response;").Line();
+                        }
                     }
                 }
 
-                //writer.Line($"return new OkObjectResult(\"\");");
                 writer.Line().Line($"throw new {typeof(NotImplementedException)}();");
-                //writer.WriteParameterNullChecks(parameters);
-
-                /*var messageVariable = new CodeWriterDeclaration("message");
-                var requestMethodName = CreateRequestMethodName(operation.Name);
-                writer.Append($"using var {messageVariable:D} = {requestMethodName}(");
-
-                foreach (Parameter parameter in parameters)
-                {
-                    writer.Append($"{parameter.Name:I}, ");
-                }
-
-                writer.RemoveTrailingComma();
-                writer.Line($");");
-
-                if (async)
-                {
-                    writer.Line($"await {PipelineField}.SendAsync({messageVariable}, cancellationToken).ConfigureAwait(false);");
-                }
-                else
-                {
-                    writer.Line($"{PipelineField}.Send({messageVariable}, cancellationToken);");
-                }
-
-                WriteStatusCodeSwitch(writer, messageVariable, operation, async);*/
             }
             writer.Line();
         }
@@ -413,6 +401,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                 }
             }
 
+            //TODO test if i need to comment this out or change it to support (query/path) parameter binding enum values
             if (enumAsString &&
                 !constantOrReference.Type.IsFrameworkType &&
                 constantOrReference.Type.Implementation is EnumType enumType)
@@ -624,7 +613,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                                 writer.Append($", headers, {responseVariable});");
                                 break;
                             case ReturnKind.Value:
-                                writer.Append($"return {typeof(Response)}.FromValue");
+                                writer.Append($"return {typeof(Azure.Response)}.FromValue");
                                 if (!Equals(responseBody?.Type, operation.ReturnType))
                                 {
                                     writer.Append($"<{operation.ReturnType}>");

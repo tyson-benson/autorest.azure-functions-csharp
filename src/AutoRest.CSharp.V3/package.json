@@ -1,6 +1,6 @@
 {
     "version": "0.1.0-preview",
-    "name": "azure-functions-csharp-net5",
+    "name": "azure-functions-csharp-net5-isolated",
     "description": "The Azure Functions extension for csharp code generators in AutoRest. This extension generates a .net 5 isolated function app.",
     "repository": {
         "type": "git",

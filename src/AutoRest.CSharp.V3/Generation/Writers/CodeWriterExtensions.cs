@@ -16,9 +16,8 @@ using AutoRest.CSharp.V3.Output.Models.Types;
 using AutoRest.CSharp.V3.Utilities;
 using Microsoft.CodeAnalysis.Options;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Azure.WebJobs;
 using System.Net;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
 
 namespace AutoRest.CSharp.V3.Generation.Writers
 {
@@ -75,6 +74,31 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                     {
                         writer.Line($"throw new {typeof(ArgumentNullException)}(nameof({parameter.Name:I}));");
                     }
+                }
+            }
+
+            writer.Line();
+        }
+
+        public static void WriteParameterAssignmentsWithNullChecks(this CodeWriter writer, IReadOnlyCollection<Parameter> parameters)
+        {
+            //_parameter ??= new Type(defaultValue);
+            //_parameter = parameter ?? new ArgumentNullException(nameof(parameter));
+            //_parameter = parameter;
+
+            foreach (Parameter parameter in parameters)
+            {
+                if (parameter.DefaultValue != null && !CanBeInitializedInline(parameter))
+                {
+                    writer.Line($"{parameter.Name} ??= new {parameter.Type}({parameter.DefaultValue.Value.Value:L});");
+                }
+                else if (CanWriteNullCheck(parameter))
+                {
+                    writer.Line($"_{parameter.Name} = {parameter.Name} ?? throw new {typeof(ArgumentNullException)}(nameof({parameter.Name:I}));");
+                }
+                else
+                {
+                    writer.Line($"_{parameter.Name} = {parameter.Name};");
                 }
             }
 

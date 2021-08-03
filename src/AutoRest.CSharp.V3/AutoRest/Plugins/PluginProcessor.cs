@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -28,10 +29,11 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
             try
             {
                 IPlugin plugin = Plugins[autoRest.PluginName]();
+                var launchDebugger = autoRest.GetValue<bool?>("launch-debugger").GetAwaiter().GetResult();
                 // AutoRest sends an empty Object as a 'true' value. When the configuration item is not present, it sends a Null value.
-                if (autoRest.GetValue<JsonElement?>($"{autoRest.PluginName}.attach").GetAwaiter().GetResult().IsObject())
+                if (launchDebugger == true && !Debugger.IsAttached)
                 {
-                    DebuggerAwaiter.AwaitAttach();
+                    Debugger.Launch();
                 }
                 await plugin.Execute(autoRest);
                 return true;

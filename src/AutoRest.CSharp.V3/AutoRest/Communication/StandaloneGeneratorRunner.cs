@@ -64,7 +64,7 @@ namespace AutoRest.CSharp.V3.AutoRest.Communication
 #pragma warning disable CS8604 // Possible null reference argument.
                 Path.Combine(basePath, root.GetProperty(nameof(Configuration.OutputFolder)).GetString()),
                 root.GetProperty(nameof(Configuration.Namespace)).GetString(),
-                root.GetProperty(nameof(Configuration.ApiGrouping)).GetString(),
+                root.GetProperty(nameof(Configuration.ApiGroupBy)).GetString(),
 #pragma warning restore CS8604 // Possible null reference argument.
                 root.GetProperty(nameof(Configuration.LibraryName)).GetString(),
                 saveInputs: false,

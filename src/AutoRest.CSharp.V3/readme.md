@@ -6,18 +6,18 @@
 
 ```yaml
 use-extension:
-  "@autorest/modelerfour": "4.15.414"
+    "@autorest/modelerfour": "4.15.414"
 modelerfour:
-  always-create-content-type-parameter: true
-  flatten-models: true
-  flatten-payloads: true
-  group-parameters: true
+    always-create-content-type-parameter: true
+    flatten-models: true
+    flatten-payloads: true
+    group-parameters: true
 pipeline:
-  azure-functions-csharp-net5:
-    input: modelerfour/identity
-  azure-functions-csharp-net5/emitter:
-    input: azure-functions-csharp-net5
-    scope: output-scope
+    azure-functions-csharp-net5-isolated:
+        input: modelerfour/identity
+    azure-functions-csharp-net5-isolated/emitter:
+        input: azure-functions-csharp-net5-isolated
+        scope: output-scope
 output-scope:
-  output-artifact: source-file-csharp
+    output-artifact: source-file-csharp
 ```

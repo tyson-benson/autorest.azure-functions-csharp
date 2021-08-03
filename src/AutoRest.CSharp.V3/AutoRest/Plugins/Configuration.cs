@@ -7,10 +7,11 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
 {
     internal class Configuration
     {
-        public Configuration(string outputFolder, string ns, string? name, bool saveInputs, bool publicClients, bool generateMetadata)
+        public Configuration(string outputFolder, string ns, string apiGroupBy, string? name, bool saveInputs, bool publicClients, bool generateMetadata)
         {
             OutputFolder = outputFolder;
             Namespace = ns;
+            ApiGroupBy = apiGroupBy;
             var namespaceParts = ns.Split('.');
             LibraryName = name ?? namespaceParts.Last();
             SaveInputs = saveInputs;
@@ -20,6 +21,7 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
 
         public string OutputFolder { get; }
         public string Namespace { get; }
+        public string ApiGroupBy { get; }
         public string LibraryName { get; }
         public bool SaveInputs { get; }
         public bool PublicClients { get; }
