@@ -243,7 +243,9 @@ namespace Azure.Core
                                  _headerFrom == HeaderFrom.AzureAsyncOperation) &&
                                 property.NameEquals("status"))
                             {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                                 state = property.Value.GetString().ToLowerInvariant();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                                 return s_terminalStates.Contains(state);
                             }
 
@@ -253,7 +255,9 @@ namespace Azure.Core
                                 {
                                     if (innerProperty.NameEquals("provisioningState"))
                                     {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                                         state = innerProperty.Value.GetString().ToLowerInvariant();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                                         return s_terminalStates.Contains(state);
                                     }
                                 }

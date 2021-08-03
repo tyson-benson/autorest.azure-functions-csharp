@@ -31,7 +31,9 @@ namespace AutoRest.CSharp.V3.AutoRest.Communication
                 }
                 var filename = Path.Combine(configuration.OutputFolder, file.Name);
                 Console.WriteLine($"Writing {filename}");
+#pragma warning disable CS8604 // Possible null reference argument.
                 Directory.CreateDirectory(Path.GetDirectoryName(filename));
+#pragma warning restore CS8604 // Possible null reference argument.
                 await File.WriteAllTextAsync(filename, file.Text);
             }
         }
@@ -59,8 +61,11 @@ namespace AutoRest.CSharp.V3.AutoRest.Communication
             JsonDocument document = JsonDocument.Parse(json);
             var root = document.RootElement;
             return new Configuration(
+#pragma warning disable CS8604 // Possible null reference argument.
                 Path.Combine(basePath, root.GetProperty(nameof(Configuration.OutputFolder)).GetString()),
                 root.GetProperty(nameof(Configuration.Namespace)).GetString(),
+                root.GetProperty(nameof(Configuration.ApiGrouping)).GetString(),
+#pragma warning restore CS8604 // Possible null reference argument.
                 root.GetProperty(nameof(Configuration.LibraryName)).GetString(),
                 saveInputs: false,
                 root.GetProperty(nameof(Configuration.PublicClients)).GetBoolean(),

@@ -224,7 +224,9 @@ namespace AutoRest.CSharp.V3.Output.Builders
                     continue;
                 }
 
-                string name = property!.FlattenedNames.ElementAt(depthIndex);
+#pragma warning disable CS8604 // Possible null reference argument.
+                string name = property.FlattenedNames.ElementAt(depthIndex);
+#pragma warning restore CS8604 // Possible null reference argument.
                 if (!propertyBag.Bag.TryGetValue(name, out PropertyBag? namedBag))
                 {
                     namedBag = new PropertyBag();

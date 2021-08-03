@@ -16,7 +16,9 @@ namespace AutoRest.CSharp.V3.Utilities
             properties.FirstOrDefault(p => p?.Name == propertyName);
 
         public static TValue ToObject<TValue>(this JsonElement element, JsonSerializerOptions? options = null) =>
+#pragma warning disable CS8603 // Possible null reference return.
             JsonSerializer.Deserialize<TValue>(element.GetRawText(), options);
+#pragma warning restore CS8603 // Possible null reference return.
 
         public static JsonElement? Parse(this string jsonText)
         {
@@ -28,7 +30,9 @@ namespace AutoRest.CSharp.V3.Utilities
             element.ValueKind == JsonValueKind.Array ? element.EnumerateArray().ToArray() : new[] { element };
 
         public static string[]? ToStringArray(this JsonElement? element) =>
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
             element?.ValueKind == JsonValueKind.Array ? element.Value.EnumerateArray().Select(e => e.GetString()).ToArray() : null;
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         public static string? ToStringValue(this JsonElement? element) =>
             element?.ValueKind == JsonValueKind.String ? element.Value.GetString() : null;
         public static int? ToNumber(this JsonElement? element) =>

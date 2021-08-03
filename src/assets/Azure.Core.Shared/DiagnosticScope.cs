@@ -109,7 +109,7 @@ namespace Azure.Core.Pipeline
         {
             private List<Activity>? _links;
 
-            public IEnumerable<Activity> Links => (IEnumerable<Activity>?)_links ?? Array.Empty<Activity>();
+            public new IEnumerable<Activity> Links => (IEnumerable<Activity>?)_links ?? Array.Empty<Activity>();
 
             public DiagnosticActivity(string operationName) : base(operationName)
             {

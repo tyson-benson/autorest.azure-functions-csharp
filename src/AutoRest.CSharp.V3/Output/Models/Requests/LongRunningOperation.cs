@@ -16,7 +16,7 @@ namespace AutoRest.CSharp.V3.Output.Models.Requests
 {
     internal class LongRunningOperation: TypeProvider
     {
-        public LongRunningOperation(OperationGroup operationGroup, Operation operation, BuildContext context) : base(context)
+        public LongRunningOperation(OperationGroup operationGroup, Input.Operation operation, BuildContext context) : base(context)
         {
             Debug.Assert(operation.IsLongRunning);
 

@@ -57,18 +57,24 @@ namespace Azure.Core
 
         public static byte[] GetBytesFromBase64(in this JsonElement element, string format) => format switch
         {
+#pragma warning disable CS8604 // Possible null reference argument.
             "U" => TypeFormatters.FromBase64UrlString(element.GetString()),
+#pragma warning restore CS8604 // Possible null reference argument.
             _ => throw new ArgumentException($"Format is not supported: '{format}'", nameof(format))
         };
 
         public static DateTimeOffset GetDateTimeOffset(in this JsonElement element, string format) => format switch
         {
             "U" when element.ValueKind == JsonValueKind.Number => DateTimeOffset.FromUnixTimeSeconds(element.GetInt64()),
+#pragma warning disable CS8604 // Possible null reference argument.
             _ => TypeFormatters.ParseDateTimeOffset(element.GetString(), format)
+#pragma warning restore CS8604 // Possible null reference argument.
         };
 
         public static TimeSpan GetTimeSpan(in this JsonElement element, string format) =>
+#pragma warning disable CS8604 // Possible null reference argument.
             TypeFormatters.ParseTimeSpan(element.GetString(), format);
+#pragma warning restore CS8604 // Possible null reference argument.
 
         public static char GetChar(this in JsonElement element)
         {
