@@ -22,24 +22,24 @@ To use this Azure Function (.NET 5 - isolated process) generator, you use the `-
 
 ```powershell
 autorest `
-  --azure-functions-csharp-net5-isolated `
-  --input-file='.\path\to\api-spec.yaml' `
-  --output-folder='.\path\to\output-directory' `
-  --clear-output-folder `
-  --namespace='Contoso.Namespace' `
-  --api-group-by='operation'
+    --use=azure-functions-csharp-net5-isolated `
+    --input-file='.\path\to\api-spec.yaml' `
+    --output-folder='.\path\to\output-directory' `
+    --clear-output-folder `
+    --namespace='Contoso.Namespace' `
+    --api-group-by='operation'
 ```
 
 If you have cloned this repository and wish to run autorest with the local build of the extension:
 
 ```powershell
 autorest `
-  --use='.\path\to\clone\artifacts\bin\AutoRest.CSharp.V3\Debug\net5.0' `
-  --input-file='.\path\to\api-spec.yaml' `
-  --output-folder='.\path\to\output-directory' `
-  --clear-output-folder `
-  --namespace='Contoso.Namespace' `
-  --api-group-by='operation'
+    --use='.\path\to\clone\artifacts\bin\AutoRest.CSharp.V3\Debug\net5.0' `
+    --input-file='.\path\to\api-spec.yaml' `
+    --output-folder='.\path\to\output-directory' `
+    --clear-output-folder `
+    --namespace='Contoso.Namespace' `
+    --api-group-by='operation'
 ```
 
 If you wish to debug this autorest plugin, you simply need to add the flag `--launch-debugger` to the above example.
