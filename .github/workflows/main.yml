@@ -9,6 +9,7 @@ on:
         branches: [feature/v3-net5]
     pull_request:
         branches: [feature/v3-net5]
+    workflow_dispatch:
 
 jobs:
     build:
