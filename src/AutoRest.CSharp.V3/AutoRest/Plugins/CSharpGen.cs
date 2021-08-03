@@ -101,7 +101,7 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
                             var codeWriter = new CodeWriter();
                             var ns = apiGroup.First().Client.Type.Namespace;
                             var cs = new CSharpType(new SelfTypeProvider(context), ns, $"{apiGroup.Key.ToCleanName()}Api");
-                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs);
+                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs, configuration);
 
                             var isFlat = configuration.ApiGroupBy == ApiGroupBy.OperationFlat;
                             //TODO consider adding a parameter to specify a desired maximum nesting depth
@@ -120,7 +120,7 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
                             var codeWriter = new CodeWriter();
                             var ns = apiGroup.First().Client.Type.Namespace;
                             var cs = new CSharpType(new SelfTypeProvider(context), ns, $"{apiGroup.Key.ToCleanName()}Api");
-                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs);
+                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs, configuration);
 
                             project.AddGeneratedFile($"{cs.Name}.cs", codeWriter.ToString());
                         }
@@ -169,7 +169,7 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
                             var codeWriter = new CodeWriter();
                             var ns = apiGroup.First().Client.Type.Namespace;
                             var cs = new CSharpType(new SelfTypeProvider(context), ns, $"{apiGroup.Key.ToCleanName()}Api");
-                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs);
+                            restServerWriter.WriteServer(codeWriter, apiGroup.Select(g => g.Operation).OrderBy(o => o.Name), cs, configuration);
 
                             project.AddGeneratedFile($"{cs.Name}.cs", codeWriter.ToString());
                         }

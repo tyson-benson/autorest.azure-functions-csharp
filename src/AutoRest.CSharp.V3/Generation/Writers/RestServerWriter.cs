@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoRest.CSharp.V3.AutoRest.Plugins;
 using AutoRest.CSharp.V3.Generation.Types;
 using AutoRest.CSharp.V3.Input;
 using AutoRest.CSharp.V3.Output.Models;
@@ -30,7 +31,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
 {
     internal class RestServerWriter
     {
-        public void WriteServer(CodeWriter writer, IEnumerable<RestClientMethod> methods, CSharpType cs)
+        public void WriteServer(CodeWriter writer, IEnumerable<RestClientMethod> methods, CSharpType cs, Configuration configuration)
         {
             using (writer.Namespace(cs.Namespace))
             {
@@ -42,7 +43,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
 
                     foreach (var method in methods)
                     {
-                        WriteOperation(writer, method, cs.Name);
+                        WriteOperation(writer, method, cs.Name, configuration);
                     }
                 }
             }
@@ -244,7 +245,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
             }
         }
 
-        private void WriteOperation(CodeWriter writer, RestClientMethod operation, string functionNamePrefix)
+        private void WriteOperation(CodeWriter writer, RestClientMethod operation, string functionNamePrefix, Configuration configuration)
         {
             using var methodScope = writer.AmbientScope();
 
@@ -317,8 +318,12 @@ namespace AutoRest.CSharp.V3.Generation.Writers
 
             writer.WriteXmlDocumentationRequiredParametersException(parameters);
 
-            var methodName = CreateMethodName(operation.Name, true);
-            var fullMethodName = $"{methodName}_{operation.Request.HttpMethod.Method.ToLowerInvariant()}";
+            //Use contentional method name 'Run' when grouping by operation
+            var isSingleFuncPerFile = configuration.ApiGroupBy == ApiGroupBy.Operation || configuration.ApiGroupBy == ApiGroupBy.OperationFlat;
+            var methodName = CreateMethodName(isSingleFuncPerFile ? "Run" : operation.Name, true);
+            var functionName = CreateMethodName(operation.Name, true);
+            var fullMethodName = $"{functionName}_{operation.Request.HttpMethod.Method.ToLowerInvariant()}";
+
             writer.Append($"[{new CSharpType(typeof(FunctionAttribute))}(\"{fullMethodName}\")]");
             writer.Append($"public async {new CSharpType(typeof(Task<>), new CSharpType(typeof(HttpResponseData)))} {methodName}(");
 
