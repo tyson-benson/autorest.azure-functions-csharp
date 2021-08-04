@@ -361,6 +361,9 @@ namespace AutoRest.CSharp.V3.Generation.Writers
 
             using (writer.Scope())
             {
+                writer.UseNamespace(typeof(ILogger).Namespace!);
+                writer.UseNamespace(typeof(HttpStatusCode).Namespace!);
+
                 writer.Line($"var logger = executionContext.GetLogger(nameof({functionNamePrefix}));");
                 writer.Line($"logger.LogInformation(\"HTTP trigger function processed a request.\");").Line();
 
@@ -378,7 +381,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                         {
                             //Give an example of constructing the response object
                             writer.Line($"// Example:");
-                            writer.Line($"// var response = req.CreateResponse({typeof(HttpStatusCode)}.OK);");
+                            writer.Line($"// var response = req.CreateResponse({typeof(HttpStatusCode).Name}.OK);");
                             writer.Line($"// var model = {response.ResponseBody.Type.Name}...");
                             writer.Line($"// await response.WriteAsJsonAsync(model);");
                             writer.Line($"// return response;").Line();
