@@ -25,14 +25,25 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
 
         public void AddGeneratedFile(string name, string text)
         {
-            var document = _project.AddDocument(name, text);
-            var root = document.GetSyntaxRootAsync().Result;
-            Debug.Assert(root != null);
+            var ext = Path.GetExtension(name);
+            if (ext == "cs")
+            {
+                var document = _project.AddDocument(name, text);
+                var root = document.GetSyntaxRootAsync().Result;
+                Debug.Assert(root != null);
 
-            root = root.WithAdditionalAnnotations(Simplifier.Annotation);
-            document = document.WithSyntaxRoot(root);
-            _project = document.Project;
+                root = root.WithAdditionalAnnotations(Simplifier.Annotation);
+                document = document.WithSyntaxRoot(root);
+                _project = document.Project;
+            }
+            else
+            {
+                //Non-c# files should not be parsed and formatted as c#
+                var document = _project.AddAdditionalDocument(name, text);
+                _project = document.Project;
+            }
         }
+
 
         public async IAsyncEnumerable<(string Name, string Text)> GetGeneratedFilesAsync()
         {
@@ -54,6 +65,12 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
                 var text = await processed.GetSyntaxTreeAsync();
 
                 yield return (processed.Name, text!.ToString());
+            }
+
+            foreach (var document in _project.AdditionalDocuments)
+            {
+                var text = await document.GetTextAsync();
+                yield return (document.Name, text!.ToString());
             }
         }
 
