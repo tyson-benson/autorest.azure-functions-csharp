@@ -25,8 +25,8 @@ namespace AutoRest.CSharp.V3.AutoRest.Plugins
 
         public void AddGeneratedFile(string name, string text)
         {
-            var ext = Path.GetExtension(name);
-            if (ext == "cs")
+            var ext = Path.GetExtension(name).ToLowerInvariant();
+            if (ext == ".cs")
             {
                 var document = _project.AddDocument(name, text);
                 var root = document.GetSyntaxRootAsync().Result;
