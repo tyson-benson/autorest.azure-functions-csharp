@@ -306,6 +306,14 @@ namespace AutoRest.CSharp.V3.Generation.Writers
             //    parameters.Insert(indexOfFirstOptional, logParameter);
             //}
 
+            writer.Line($"private readonly ILogger _logger;");
+            writer.LineRaw($"");
+            writer.Line($"public {functionNamePrefix}(ILoggerFactory loggerFactory)");
+            writer.Line($"{{");
+            writer.Line($"_logger = loggerFactory.CreateLogger<{functionNamePrefix}>();");
+            writer.Line($"}}");
+            writer.LineRaw($"");
+
             writer.WriteXmlDocumentationSummary(operation.Description);
 
             foreach (Parameter parameter in parameters)
@@ -364,8 +372,7 @@ namespace AutoRest.CSharp.V3.Generation.Writers
                 writer.UseNamespace(typeof(ILogger).Namespace!);
                 writer.UseNamespace(typeof(HttpStatusCode).Namespace!);
 
-                writer.Line($"var logger = executionContext.GetLogger(nameof({functionNamePrefix}));");
-                writer.Line($"logger.LogInformation(\"HTTP trigger function processed a request.\");").Line();
+                writer.Line($"_logger.LogInformation(\"HTTP trigger function processed a request.\");").Line();
 
                 if (operation.Responses.Any())
                 {

@@ -2,9 +2,9 @@
 
 ## Setup
 
--   [NodeJS](https://nodejs.org/en/) (13.x.x)
+-   [NodeJS](https://nodejs.org/en/) (16.x.x)
 -   `npm install` (at root)
--   [.NET Core SDK](https://dotnet.microsoft.com/download/dotnet-core/5.0) (5.0.302)
+-   [.NET Core SDK](https://dotnet.microsoft.com/download/dotnet-core/6.0) (6.0.402)
 -   [PowerShell Core](https://github.com/PowerShell/PowerShell/releases/latest)
 -   [Azure Functions Core Tools](https://github.com/Azure/azure-functions-core-tools)
 
@@ -18,11 +18,11 @@
 npm install -g autorest
 ```
 
-To use this Azure Function (.NET 5 - isolated process) generator, you use the `--azure-functions-csharp-net5-isolated` generator plugin. The `--input-file` parameter can also take in a URL as well.
+To use this Azure Function (.NET 6 - isolated process) generator, you use the `--azure-functions-csharp-net6-isolated` generator plugin. The `--input-file` parameter can also take in a URL as well.
 
 ```powershell
 autorest `
-    --use=azure-functions-csharp-net5-isolated `
+    --use=azure-functions-csharp-net6-isolated `
     --input-file='.\path\to\api-spec.yaml' `
     --output-folder='.\path\to\output-directory' `
     --clear-output-folder `
@@ -34,17 +34,27 @@ If you have cloned this repository and wish to run autorest with the local build
 
 ```powershell
 autorest `
-    --use='.\path\to\clone\artifacts\bin\AutoRest.CSharp.V3\Debug\net5.0' `
-    --input-file='.\path\to\api-spec.yaml' `
-    --output-folder='.\path\to\output-directory' `
+    --use='C:\GitHub\autorest.azure-functions-csharp\artifacts\bin\AutoRest.CSharp.V3\Debug\net6.0' `
+    --input-file='C:\GitHub\Janison\platform\src\api\rest\v1\events-api\spec.yaml' `
+    --output-folder='C:\GitHub\Janison\platform\src\api\rest\v1\events-api\gen2' `
     --clear-output-folder `
-    --namespace='Contoso.Namespace' `
+    --namespace='Janison.API' `
     --api-group-by='operation'
 ```
 
 If you wish to debug this autorest plugin, you simply need to add the flag `--launch-debugger` to the above example.
 Please remember to compile the solution to ensure that the debugger will attach with the correct symbols.
 
+```powershell
+autorest `
+    --use='C:\GitHub\autorest.azure-functions-csharp\artifacts\bin\AutoRest.CSharp.V3\Debug\net6.0' `
+    --input-file='C:\GitHub\Janison\platform\src\api\rest\v1\events-api\spec.yaml' `
+    --output-folder='C:\GitHub\Janison\platform\src\api\rest\v1\events-api\gen2' `
+    --clear-output-folder `
+    --namespace='Janison.API' `
+    --api-group-by='operation' `
+    --launch-debugger
+```
 ## Configuration
 
 ```yaml
@@ -52,14 +62,14 @@ Please remember to compile the solution to ensure that the debugger will attach 
 version: 3.0.6289
 shared-source-folder: $(this-folder)/src/assets
 save-inputs: true
-use: $(this-folder)/artifacts/bin/AutoRest.CSharp.V3/Debug/net5.0/
+use: $(this-folder)/artifacts/bin/AutoRest.CSharp.V3/Debug/net6.0/
 clear-output-folder: false
 public-clients: true
 pipeline:
-    azure-functions-net5-csharpproj:
+    azure-functions-net6-csharpproj:
         input: modelerfour/identity
-    azure-functions-net5-csharpproj/emitter:
-        input: azure-functions-net5-csharpproj
+    azure-functions-net6-csharpproj/emitter:
+        input: azure-functions-net6-csharpproj
         scope: output-scope
 ```
 

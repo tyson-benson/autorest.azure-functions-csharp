@@ -22,16 +22,16 @@ namespace AutoRest.CSharp.V3.Utilities
             _ => String.Empty
         };
 
-        public static RequestMethod? ToCoreRequestMethod(this HttpMethod method) => method switch
+        public static RequestMethod? ToCoreRequestMethod(this Input.HttpMethod method) => method switch
         {
-            HttpMethod.Delete => RequestMethod.Delete,
-            HttpMethod.Get => RequestMethod.Get,
-            HttpMethod.Head => RequestMethod.Head,
-            HttpMethod.Options => RequestMethod.Options,
-            HttpMethod.Patch => RequestMethod.Patch,
-            HttpMethod.Post => RequestMethod.Post,
-            HttpMethod.Put => RequestMethod.Put,
-            HttpMethod.Trace => RequestMethod.Trace,
+            Input.HttpMethod.Delete => RequestMethod.Delete,
+            Input.HttpMethod.Get => RequestMethod.Get,
+            Input.HttpMethod.Head => RequestMethod.Head,
+            Input.HttpMethod.Options => RequestMethod.Options,
+            Input.HttpMethod.Patch => RequestMethod.Patch,
+            Input.HttpMethod.Post => RequestMethod.Post,
+            Input.HttpMethod.Put => RequestMethod.Put,
+            Input.HttpMethod.Trace => RequestMethod.Trace,
             _ => (RequestMethod?)null
         };
     }

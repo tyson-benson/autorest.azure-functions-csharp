@@ -28,7 +28,7 @@ using AutoRest.CSharp.V3.Output.Models.Requests;
 
 namespace AutoRest.CSharp.V3.AutoRest.Plugins
 {
-    [PluginName("azure-functions-csharp-net5-isolated")]
+    [PluginName("azure-functions-csharp-net6-isolated")]
     internal class CSharpGen : IPlugin
     {
 

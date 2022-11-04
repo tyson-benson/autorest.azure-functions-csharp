@@ -14,6 +14,7 @@ using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using media_types.Models;
+using ContentType = media_types.Models.ContentType;
 
 namespace media_types
 {

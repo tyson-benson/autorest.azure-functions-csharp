@@ -70,7 +70,9 @@ namespace AutoRest.CSharp.V3.Input
             foreach (var (propKey, propValue) in matchedProperties)
             {
                 var innerInfo = properties[propKey];
+#pragma warning disable CS8604 // Possible null reference argument.
                 innerInfo.SetValue(property, innerInfo.DeserializeDictionary(propValue));
+#pragma warning restore CS8604 // Possible null reference argument.
             }
             return property;
         }

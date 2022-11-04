@@ -1,17 +1,17 @@
-# Azure Functions C# .NET 5 isolated process code generator for AutoRest V3
+# Azure Functions C# .NET 6 isolated process code generator for AutoRest V3
 
 This is a code generation plugin for [autorest](https://aka.ms/autorest) - Microsoft's REST API code generation toolset.
 This plugin was based on [@autorest/azure-functions-csharp](https://github.com/Azure/autorest.azure-functions-csharp), and updated to generate
-Azure Function apps for the new .NET 5 isolated runtime.
+Azure Function apps for the new .NET 6 isolated runtime.
 
-In addition to generating .net 5 isolated function apps, a new option has been added (`api-group-by`) to provide additional folder structures
+In addition to generating .net 6 isolated function apps, a new option has been added (`api-group-by`) to provide additional folder structures
 to arrange the generated API operations. See [the table below](#api-&-operation-file-organisation) for further details.
 
 ## Usage
 
 ```
 autorest `
-    --use=azure-functions-csharp-net5-isolated `
+    --use=azure-functions-csharp-net6-isolated `
     --input-file=.\path\to\api-spec.yaml `
     --output-folder=.\path\to\output-directory `
     --namespace=Contoso.Namespace `
@@ -49,10 +49,10 @@ modelerfour:
     flatten-payloads: true
     group-parameters: true
 pipeline:
-    azure-functions-csharp-net5-isolated:
+    azure-functions-csharp-net6-isolated:
         input: modelerfour/identity
-    azure-functions-csharp-net5-isolated/emitter:
-        input: azure-functions-csharp-net5-isolated
+    azure-functions-csharp-net6-isolated/emitter:
+        input: azure-functions-csharp-net6-isolated
         scope: output-scope
 output-scope:
     output-artifact: source-file-csharp

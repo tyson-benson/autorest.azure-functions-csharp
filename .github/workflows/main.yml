@@ -3,12 +3,12 @@
 name: CI
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the feature/v3-net5 branch
+# events but only for the feature/v4-net6 branch
 on:
     push:
-        branches: [feature/v3-net5]
+        branches: [feature/v4-net6]
     pull_request:
-        branches: [feature/v3-net5]
+        branches: [feature/v4-net6]
     workflow_dispatch:
 
 env:
@@ -21,20 +21,20 @@ jobs:
         steps:
             - uses: actions/checkout@v2
 
-            - name: Setup .NET Core SDK 3
-              uses: actions/setup-dotnet@v1.8.1
-              with:
-                  dotnet-version: 3.1.x
+            # - name: Setup .NET Core SDK 3
+            #   uses: actions/setup-dotnet@v1.8.1
+            #   with:
+            #       dotnet-version: 3.1.x
 
-            - name: Setup .NET Core SDK 5
-              uses: actions/setup-dotnet@v1.8.1
+            - name: Setup .NET Core SDK 6
+              uses: actions/setup-dotnet@v3
               with:
                   dotnet-version: 5.0.x
 
             - name: Setup Node.js environment
-              uses: actions/setup-node@v2.3.0
+              uses: actions/setup-node@v3
               with:
-                  node-version: 14.x
+                  node-version: 16
                   check-latest: true
 
             - name: Perform npm install
@@ -50,7 +50,7 @@ jobs:
             - name: Create tgz
               id: create_tgz
               run: |
-                  cd artifacts/bin/AutoRest.CSharp.V3/Debug/net5.0/
+                  cd artifacts/bin/AutoRest.CSharp.V3/Debug/net6.0/
                   currentVersion=$(node -p -e "require('./package.json').version")
                   devVersion="${currentVersion}-dev.$GITHUB_RUN_ID"
                   echo "Setting version to ${devVersion}"
@@ -82,6 +82,6 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: artifacts/bin/AutoRest.CSharp.V3/Debug/net5.0/${{ steps.create_tgz.outputs.fileName }}
+                  asset_path: artifacts/bin/AutoRest.CSharp.V3/Debug/net6.0/${{ steps.create_tgz.outputs.fileName }}
                   asset_name: ${{ steps.create_tgz.outputs.fileName }}
                   asset_content_type: application/gzip

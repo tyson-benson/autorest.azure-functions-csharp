@@ -18,7 +18,9 @@ namespace AutoRest.CodeModel
 
         private static void Main()
         {
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
             using var webClient = new WebClient();
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
             webClient.DownloadFile(@"https://raw.githubusercontent.com/Azure/perks/master/codemodel/.resources/all-in-one/json/code-model.json", "code-model.json");
 
             var schemaJson = File.ReadAllText("code-model.json")
